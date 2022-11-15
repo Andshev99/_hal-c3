@@ -19,7 +19,7 @@
             "openOCDPreConfigLaunchCommands": [
                 "set ESP_RTOS none"
             ],
-            "serverpath": "d:/espressif/Espressif/tools/openocd-esp32/v0.11.0-esp32-20220411/openocd-esp32/bin/openocd.exe",
+            "serverpath": "d:/Espressif/tools/openocd-esp32/v0.11.0-esp32-20220411/openocd-esp32/bin/openocd.exe",
             "configFiles": [
                 "board/esp32c3-builtin.cfg"
             ],

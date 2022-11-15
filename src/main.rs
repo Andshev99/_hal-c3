@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use esp32c3_hal::{clock::ClockControl, pac::Peripherals, prelude::*, timer::TimerGroup, Rtc};
+use esp32c3_hal::{clock::ClockControl, pac::Peripherals, prelude::*, timer::TimerGroup, Rtc, Delay, IO};
 use esp_backtrace as _;
 
 #[riscv_rt::entry]
@@ -22,5 +22,20 @@ fn main() -> ! {
     wdt0.disable();
     wdt1.disable();
 
-    loop {}
+    esp_println::println!("Hello World");
+
+    // Set GPIO7 as an output, and set its state high initially.
+    let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
+    let mut led = io.pins.gpio7.into_push_pull_output();
+
+    led.set_high().unwrap();
+
+    // Initialize the Delay peripheral, and use it to toggle the LED state in a
+    // loop.
+    let mut delay = Delay::new(&clocks);
+
+    loop {
+        led.toggle().unwrap();
+        delay.delay_ms(500u32);
+    }
 }
