@@ -15,11 +15,11 @@
             "interface": "jtag",
             "svdFile": "esp32c3.svd",
             "toolchainPrefix": "riscv32-esp-elf",
-            "showDevDebugOutput": "none",
+            "showDevDebugOutput": "raw",
             "openOCDPreConfigLaunchCommands": [
                 "set ESP_RTOS none"
             ],
-            "serverpath": "d:/Espressif/tools/openocd-esp32/v0.11.0-esp32-20220411/openocd-esp32/bin/openocd.exe",
+            "serverpath": "${env:ESP_OPENOCD_BIN}/openocd.exe",            
             "configFiles": [
                 "board/esp32c3-builtin.cfg"
             ],
@@ -32,6 +32,7 @@
                 "mon reset halt",
                 "flushregs",
                 "c",
+                "set timeout 10000"
             ]
         }
     ]

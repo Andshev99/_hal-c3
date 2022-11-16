@@ -1,8 +1,21 @@
 #![no_std]
 #![no_main]
 
-use esp32c3_hal::{clock::ClockControl, pac::Peripherals, prelude::*, timer::TimerGroup, Rtc, Delay, IO};
+use core::cell::RefCell;
+use critical_section::Mutex;
+use esp32c3_hal::{
+    clock::ClockControl,
+    gpio::Gpio9,
+    gpio_types::{Event, Input, Pin, PullUp},
+    interrupt,
+    pac::{self, Peripherals},
+    prelude::*,
+    timer::TimerGroup,
+    Rtc, IO, Delay
+};
 use esp_backtrace as _;
+
+static BUTTON: Mutex<RefCell<Option<Gpio9<Input<PullUp>>>>> = Mutex::new(RefCell::new(None));
 
 #[riscv_rt::entry]
 fn main() -> ! {
@@ -27,21 +40,38 @@ fn main() -> ! {
     // Set GPIO7 as an output, and set its state high initially.
     let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
     let mut led = io.pins.gpio7.into_push_pull_output();
-    let button = io.pins.gpio9.into_pull_up_input();
-
     led.set_high().unwrap();
-
     let mut delay = Delay::new(&clocks);
+
+    let mut button = io.pins.gpio9.into_pull_up_input();
+    button.listen(Event::FallingEdge); // raise interrupt on falling edge
+    critical_section::with(|cs| BUTTON.borrow_ref_mut(cs).replace(button));
+    interrupt::enable(pac::Interrupt::GPIO, interrupt::Priority::Priority3).unwrap();
 
     loop {
         // led.toggle().unwrap();
-        // delay.delay_ms(500u32);
-        if button.is_high().unwrap() {
-            led.set_high().unwrap();
-            delay.delay_ms(10u32);
-        } else {
-            led.set_low().unwrap();
-            delay.delay_ms(10u32);
-        }
+        led.set_high().unwrap();
+        delay.delay_ms(100u32);
+        led.set_low().unwrap();
+        delay.delay_ms(1900u32);
+        // if button.is_high().unwrap() {
+        //     led.set_high().unwrap();
+        //     delay.delay_ms(10u32);
+        // } else {
+        //     led.set_low().unwrap();
+        //     delay.delay_ms(10u32);
+        // }
     }
+}
+
+#[interrupt]
+fn GPIO() {
+    critical_section::with(|cs| {
+        esp_println::println!("GPIO interrupt");
+        BUTTON
+            .borrow_ref_mut(cs)
+            .as_mut()
+            .unwrap()
+            .clear_interrupt();
+    });
 }

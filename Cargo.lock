@@ -197,6 +197,7 @@ dependencies = [
 name = "hal_c3"
 version = "0.1.0"
 dependencies = [
+ "critical-section",
  "esp-backtrace",
  "esp-println 0.3.1",
  "esp32c3-hal",
